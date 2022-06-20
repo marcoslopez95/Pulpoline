@@ -23556,10 +23556,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue_select__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! vue-select */ "./node_modules/vue-select/dist/vue-select.js");
 /* harmony import */ var vue_select__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(vue_select__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var vue_select_dist_vue_select_css__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! vue-select/dist/vue-select.css */ "./node_modules/vue-select/dist/vue-select.css");
-/* harmony import */ var _ValidConversor__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./ValidConversor */ "./resources/js/Pages/Conversor/ValidConversor.js");
-/* harmony import */ var _VarFormConversor__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./VarFormConversor */ "./resources/js/Pages/Conversor/VarFormConversor.js");
-/* harmony import */ var _ApiConvert__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./ApiConvert */ "./resources/js/Pages/Conversor/ApiConvert.js");
-
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _testApi__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./testApi */ "./resources/js/Pages/Conversor/testApi.js");
 
 
 
@@ -23575,31 +23574,121 @@ __webpack_require__.r(__webpack_exports__);
   setup: function setup(__props, _ref) {
     var expose = _ref.expose;
     expose();
+    var form = (0,_inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.useForm)({
+      from: null,
+      to: null
+    });
+    var boolConvert = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)(false);
+    var currencies = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)([]);
+    var amount = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)(null);
+    var convertVar = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)([]);
+
+    var changeCurrency = function changeCurrency() {
+      var temp = form.from;
+      form.from = form.to;
+      form.to = temp;
+    };
+
+    var toCurrency = function toCurrency() {
+      return amount.value === null || form.to === null ? '' : (amount.value * (1 / convertVar.value[0])).toFixed(2) + ' ' + form.to.name;
+    };
+
+    var fromCurrency = function fromCurrency() {
+      return amount.value === null || form.from === null ? '' : amount.value + ' ' + form.from.name + ' = ';
+    };
+
+    var validateForm = function validateForm() {
+      return amount.value !== null && form.from !== null && form.to !== null;
+    };
+
+    var query = {
+      apiKey: (0,_inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.usePage)().props.value.currency_convert_key
+    };
+
+    var convert = function convert() {
+      var url = "https://free.currconv.com/api/v7/convert";
+      var q;
+      q = form.from.code + '_' + form.to.code;
+      q += ',' + form.to.code + '_' + form.from.code;
+      query.q = q;
+      query.compact = 'ultra';
+      axios__WEBPACK_IMPORTED_MODULE_8___default().get(url, {
+        params: query
+      }).then(function (res) {
+        //console.log('con',res.data);
+        var data = res.data;
+
+        for (var currency in data) {
+          console.log(data[currency]);
+          convertVar.value.push(data[currency]);
+        }
+
+        boolConvert.value = true;
+      });
+    };
+
+    var exchangeValue = function exchangeValue() {
+      var convertTo = '1 ' + form.to.code + ' = ' + 1 / convertVar.value[0] + ' ' + form.from.code;
+      var convertFrom = '1 ' + form.from.code + ' = ' + 1 / convertVar.value[1] + ' ' + form.to.code;
+      return [convertTo, convertFrom];
+    };
+
+    var getCurrencies = function getCurrencies() {
+      var url = "https://free.currconv.com/api/v7/currencies";
+      axios__WEBPACK_IMPORTED_MODULE_8___default().get(url, {
+        params: query
+      }).then(function (resp) {
+        var data = resp.data.results;
+
+        for (var currency in data) {
+          var code = data[currency].id;
+          var name = data[currency].currencyName;
+          var label = code + ' - ' + name;
+          var symbol = data[currency].currencySymbol;
+          currencies.value.push({
+            code: code,
+            label: label,
+            name: name,
+            symbol: symbol
+          });
+        }
+      });
+    };
+
     (0,vue__WEBPACK_IMPORTED_MODULE_1__.onUpdated)(function () {
-      (0,_ValidConversor__WEBPACK_IMPORTED_MODULE_8__.validateForm)();
+      validateForm();
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_1__.onMounted)(function () {
-      (0,_ApiConvert__WEBPACK_IMPORTED_MODULE_10__.getCurrencies)();
+      getCurrencies();
     });
     var __returned__ = {
+      form: form,
+      boolConvert: boolConvert,
+      currencies: currencies,
+      amount: amount,
+      convertVar: convertVar,
+      changeCurrency: changeCurrency,
+      toCurrency: toCurrency,
+      fromCurrency: fromCurrency,
+      validateForm: validateForm,
+      query: query,
+      convert: convert,
+      exchangeValue: exchangeValue,
+      getCurrencies: getCurrencies,
       Head: _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.Head,
+      usePage: _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.usePage,
+      useForm: _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.useForm,
       onMounted: vue__WEBPACK_IMPORTED_MODULE_1__.onMounted,
       onUpdated: vue__WEBPACK_IMPORTED_MODULE_1__.onUpdated,
+      ref: vue__WEBPACK_IMPORTED_MODULE_1__.ref,
       Label: _Jetstream_Label_vue__WEBPACK_IMPORTED_MODULE_2__["default"],
       Input: _Jetstream_Input_vue__WEBPACK_IMPORTED_MODULE_3__["default"],
       SwitchIcon: _Components_Icons_SwitchIcon_vue__WEBPACK_IMPORTED_MODULE_4__["default"],
       Button: _Jetstream_Button_vue__WEBPACK_IMPORTED_MODULE_5__["default"],
       VSelect: (vue_select__WEBPACK_IMPORTED_MODULE_6___default()),
-      validateForm: _ValidConversor__WEBPACK_IMPORTED_MODULE_8__.validateForm,
-      fromCurrency: _ValidConversor__WEBPACK_IMPORTED_MODULE_8__.fromCurrency,
-      toCurrency: _ValidConversor__WEBPACK_IMPORTED_MODULE_8__.toCurrency,
-      amount: _VarFormConversor__WEBPACK_IMPORTED_MODULE_9__.amount,
-      form: _VarFormConversor__WEBPACK_IMPORTED_MODULE_9__.form,
-      changeCurrency: _VarFormConversor__WEBPACK_IMPORTED_MODULE_9__.changeCurrency,
-      convert: _ApiConvert__WEBPACK_IMPORTED_MODULE_10__.convert,
-      getCurrencies: _ApiConvert__WEBPACK_IMPORTED_MODULE_10__.getCurrencies,
-      currencies: _ApiConvert__WEBPACK_IMPORTED_MODULE_10__.currencies,
-      boolConvert: _ApiConvert__WEBPACK_IMPORTED_MODULE_10__.boolConvert
+      axios: (axios__WEBPACK_IMPORTED_MODULE_8___default()),
+      countries_test: _testApi__WEBPACK_IMPORTED_MODULE_9__.countries_test,
+      convert_curren_test: _testApi__WEBPACK_IMPORTED_MODULE_9__.convert_curren_test
     };
     Object.defineProperty(__returned__, '__isScriptSetup', {
       enumerable: false,
@@ -27513,13 +27602,19 @@ var _hoisted_12 = {
 var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Convertir ");
 
 var _hoisted_14 = {
-  "class": "p-6"
+  key: 0
 };
 var _hoisted_15 = {
-  "class": "text-gray-400 text-lg"
+  "class": "p-6"
 };
 var _hoisted_16 = {
+  "class": "text-gray-400 text-lg"
+};
+var _hoisted_17 = {
   "class": "text-gray-800 text-4xl mt-[15px] ml-[25px]"
+};
+var _hoisted_18 = {
+  "class": "p-6"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)($setup["Head"], {
@@ -27569,9 +27664,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* PROPS */
   , ["modelValue", "options"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     "class": "my-auto pt-5",
-    onClick: _cache[3] || (_cache[3] = function () {
-      return $setup.changeCurrency && $setup.changeCurrency.apply($setup, arguments);
-    })
+    onClick: $setup.changeCurrency
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)($setup["SwitchIcon"], {
     "class": "fill-blue-700"
   })])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)($setup["Label"], {
@@ -27587,11 +27680,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)($setup["VSelect"], {
     id: "to",
     "class": "w-[290px] border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm",
-    onChange: _cache[4] || (_cache[4] = function ($event) {
+    onChange: _cache[3] || (_cache[3] = function ($event) {
       return $setup.boolConvert = false;
     }),
     modelValue: $setup.form.to,
-    "onUpdate:modelValue": _cache[5] || (_cache[5] = function ($event) {
+    "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
       return $setup.form.to = $event;
     }),
     options: $setup.currencies
@@ -27609,13 +27702,20 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
   }, 8
   /* PROPS */
-  , ["onClick", "disabled"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.fromCurrency()), 1
+  , ["disabled"])])]), $setup.boolConvert ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.fromCurrency()), 1
   /* TEXT */
-  ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.toCurrency()), 1
+  ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.toCurrency()), 1
   /* TEXT */
-  )])], 512
-  /* NEED_PATCH */
-  ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, $setup.boolConvert]])])])])])], 64
+  )]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.exchangeValue(), function (item, k) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "text-gray-400 text-lg",
+      key: k
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item), 1
+    /* TEXT */
+    );
+  }), 128
+  /* KEYED_FRAGMENT */
+  ))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])])])])], 64
   /* STABLE_FRAGMENT */
   );
 }
@@ -28939,133 +29039,34 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 /***/ }),
 
-/***/ "./resources/js/Pages/Conversor/ApiConvert.js":
-/*!****************************************************!*\
-  !*** ./resources/js/Pages/Conversor/ApiConvert.js ***!
-  \****************************************************/
+/***/ "./resources/js/Pages/Conversor/testApi.js":
+/*!*************************************************!*\
+  !*** ./resources/js/Pages/Conversor/testApi.js ***!
+  \*************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "boolConvert": () => (/* binding */ boolConvert),
-/* harmony export */   "convert": () => (/* binding */ convert),
-/* harmony export */   "currencies": () => (/* binding */ currencies),
-/* harmony export */   "getCurrencies": () => (/* binding */ getCurrencies)
+/* harmony export */   "convert_curren_test": () => (/* binding */ convert_curren_test),
+/* harmony export */   "countries_test": () => (/* binding */ countries_test)
 /* harmony export */ });
-/* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_2__);
-
-
-
-var boolConvert = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)(false);
-var currencies = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)([]);
-var key = (0,_inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.usePage)().props.value.currency_convert_key;
-var query = {
-  apiKey: key
+var countries_test = {
+  "ALL": {
+    "currencyName": "Albanian Lek",
+    "currencySymbol": "Lek",
+    "id": "ALL"
+  },
+  "XCD": {
+    "currencyName": "East Caribbean Dollar",
+    "currencySymbol": "$",
+    "id": "XCD"
+  }
 };
-
-var convert = function convert() {
-  var url = "https://free.currconv.com/api/v7/convert";
-  var q;
-  q = form.from.code + '_' + form.to.code;
-  q += ',' + form.to.code + '_' + form.from.code;
-  query.q = q;
-  query.compact = 'ultra';
-  axios__WEBPACK_IMPORTED_MODULE_2___default().get(url, {
-    params: query
-  }).then(function (res) {
-    console.log('con', res.data);
-    boolConvert.value = true;
-  });
+var convert_curren_test = {
+  "ALL_XCD": 0.023761,
+  "XCD_ALL": 42.085853
 };
-
-var getCurrencies = function getCurrencies() {
-  var url = "https://free.currconv.com/api/v7/currencies";
-  axios__WEBPACK_IMPORTED_MODULE_2___default().get(url, {
-    params: query
-  }).then(function (resp) {
-    var data = resp.data.results;
-
-    for (var currency in data) {
-      var code = data[currency].id;
-      var name = data[currency].currencyName;
-      var label = code + ' - ' + name;
-      var symbol = data[currency].currencySymbol;
-      currencies.value.push({
-        code: code,
-        label: label,
-        name: name,
-        symbol: symbol
-      });
-    }
-  });
-};
-
-
-
-/***/ }),
-
-/***/ "./resources/js/Pages/Conversor/ValidConversor.js":
-/*!********************************************************!*\
-  !*** ./resources/js/Pages/Conversor/ValidConversor.js ***!
-  \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "fromCurrency": () => (/* binding */ fromCurrency),
-/* harmony export */   "toCurrency": () => (/* binding */ toCurrency),
-/* harmony export */   "validateForm": () => (/* binding */ validateForm)
-/* harmony export */ });
-var toCurrency = function toCurrency() {
-  return amount.value === null || form.to === null ? '' : amount.value + ' ' + form.to.name;
-};
-
-var fromCurrency = function fromCurrency() {
-  return amount.value === null || form.from === null ? '' : amount.value + ' ' + form.from.name + ' = ';
-};
-
-var validateForm = function validateForm() {
-  return amount.value !== null && form.from !== null && form.to !== null;
-};
-
-
-
-/***/ }),
-
-/***/ "./resources/js/Pages/Conversor/VarFormConversor.js":
-/*!**********************************************************!*\
-  !*** ./resources/js/Pages/Conversor/VarFormConversor.js ***!
-  \**********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "amount": () => (/* binding */ amount),
-/* harmony export */   "changeCurrency": () => (/* binding */ changeCurrency),
-/* harmony export */   "form": () => (/* binding */ form)
-/* harmony export */ });
-/* harmony import */ var _inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @inertiajs/inertia-vue3 */ "./node_modules/@inertiajs/inertia-vue3/dist/index.js");
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-
-
-var form = (0,_inertiajs_inertia_vue3__WEBPACK_IMPORTED_MODULE_0__.useForm)({
-  from: null,
-  to: null
-});
-var amount = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)(null);
-
-var changeCurrency = function changeCurrency() {
-  var temp = form.from;
-  form.from = form.to;
-  form.to = temp;
-};
-
 
 
 /***/ }),

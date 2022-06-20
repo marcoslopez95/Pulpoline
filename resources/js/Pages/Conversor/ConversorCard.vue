@@ -1,28 +1,103 @@
 <script setup>
-import { Head } from "@inertiajs/inertia-vue3";
-import { onMounted, onUpdated } from "vue";
+import { Head, usePage,useForm } from "@inertiajs/inertia-vue3";
+import { onMounted, onUpdated,ref } from "vue";
 import Label from "../../Jetstream/Label.vue";
 import Input from "../../Jetstream/Input.vue";
 import SwitchIcon from "../../Components/Icons/SwitchIcon.vue";
 import Button from "../../Jetstream/Button.vue";
 import VSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
+import axios from "axios";
 import {
-    validateForm,
-    fromCurrency,
-    toCurrency
-} from './ValidConversor'
-import {
-    amount,
-    form,
-    changeCurrency
-} from './VarFormConversor'
-import {
-    convert,
-    getCurrencies,
-    currencies,
-    boolConvert
-} from './ApiConvert'
+    countries_test,
+    convert_curren_test
+} from './testApi'
+
+const form = useForm({
+    from: null,
+    to:null,
+});
+const boolConvert = ref(false)
+const currencies = ref([]);
+const amount = ref(null);
+const convertVar = ref([])
+
+const changeCurrency = () => {
+    let temp = form.from;
+    form.from = form.to;
+    form.to = temp;
+};
+
+const toCurrency = () => {
+    return amount.value === null || form.to === null ?
+            '' :
+            (amount.value * (1/convertVar.value[0])).toFixed(2) +' '+ form.to.name
+}
+const fromCurrency = () => {
+    return amount.value === null || form.from === null ?
+            '' :
+            amount.value +' '+ form.from.name + ' = '
+}
+
+const validateForm = () => {
+    return amount.value !== null &&
+        form.from !== null && form.to !== null
+}
+
+const query = {
+    apiKey: usePage().props.value.currency_convert_key
+};
+
+const convert = () => {
+    const url = "https://free.currconv.com/api/v7/convert";
+    let q
+    q = form.from.code+'_'+form.to.code
+    q += ',' + form.to.code+'_'+form.from.code
+    query.q = q
+    query.compact = 'ultra'
+
+
+    axios
+        .get(url, {params: query})
+        .then(res => {
+            //console.log('con',res.data);
+            let data = res.data
+            for (let currency in data) {
+                console.log(data[currency]);
+                convertVar.value.push(data[currency])
+            }
+            boolConvert.value = true
+        })
+    ;
+};
+
+const exchangeValue = () =>{
+
+    let convertTo = '1 '+form.to.code+' = '+(1/convertVar.value[0]) + ' ' + form.from.code
+    let convertFrom = '1 '+form.from.code+' = '+(1/convertVar.value[1]) + ' ' + form.to.code
+    return [
+        convertTo,
+        convertFrom,
+    ]
+}
+
+const getCurrencies = () => {
+    const url = "https://free.currconv.com/api/v7/currencies";
+
+    axios.get(url, { params: query }).then((resp) => {
+        const data = resp.data.results;
+
+        for (let currency in data) {
+            let code = data[currency].id
+            let name = data[currency].currencyName
+            let label = code + ' - '+name
+            let symbol = data[currency].currencySymbol
+            currencies.value.push({
+                code,label,name,symbol
+            })
+        }
+    });
+};
 
 onUpdated(() =>{
     validateForm()
@@ -131,13 +206,18 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div v-show="boolConvert">
+                    <div v-if="boolConvert">
                         <div class="p-6">
                             <div class="text-gray-400 text-lg">
                                 {{fromCurrency()}}
                             </div>
                             <div class="text-gray-800 text-4xl mt-[15px] ml-[25px]">
                                 {{toCurrency()}}
+                            </div>
+                        </div>
+                        <div class="p-6">
+                             <div class="text-gray-400 text-lg" v-for="(item,k) in exchangeValue()" :key="k">
+                                {{item}}
                             </div>
                         </div>
                     </div>
