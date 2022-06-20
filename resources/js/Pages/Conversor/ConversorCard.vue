@@ -21,21 +21,32 @@ const boolConvert = ref(false)
 const currencies = ref([]);
 const amount = ref(null);
 const convertVar = ref([])
+const fromCurr = ref(null)
+const toCurr = ref(null)
 
-const changeCurrency = () => {
+const changeCurrency = async () => {
     let temp = form.from;
     form.from = form.to;
     form.to = temp;
+    let temp_convert = []
+    for(let item in convertVar.value){
+        temp_convert.push(convertVar.value[item])
+    }
+
+    convertVar.value[1] = temp_convert[0]
+    convertVar.value[0] = temp_convert[1]
+    await fromCurrency()
+    await toCurrency()
 };
 
+
 const toCurrency = () => {
-    return amount.value === null || form.to === null ?
-            '' :
-            (amount.value * (1/convertVar.value[0])).toFixed(2) +' '+ form.to.name
+    toCurr.value =
+            (amount.value * (1/convertVar.value[1])).toFixed(2) +' '+ form.to.name
 }
+
 const fromCurrency = () => {
-    return amount.value === null || form.from === null ?
-            '' :
+    fromCurr.value =
             amount.value +' '+ form.from.name + ' = '
 }
 
@@ -48,7 +59,8 @@ const query = {
     apiKey: usePage().props.value.currency_convert_key
 };
 
-const convert = () => {
+const convert =  () => {
+    convertVar.value = []
     const url = "https://free.currconv.com/api/v7/convert";
     let q
     q = form.from.code+'_'+form.to.code
@@ -56,33 +68,78 @@ const convert = () => {
     query.q = q
     query.compact = 'ultra'
 
+    /**
+     * test
+     */
+    // for (let currency in convert_curren_test) {
+    //     if(currency.includes(form.from.code+'_'))
+    //         convertVar.value.unshift(convert_curren_test[currency])
+    //     if(currency.includes('_'+form.from.code))
+    //         convertVar.value.push(convert_curren_test[currency])
+    //     if(convertVar.length == 2)
+    //         break
+    // }
 
     axios
         .get(url, {params: query})
         .then(res => {
-            //console.log('con',res.data);
             let data = res.data
-            for (let currency in data) {
-                console.log(data[currency]);
+
+           for (let currency in data) {
+            if(currency.includes(form.from.code+'_'))
+                convertVar.value.unshift(data[currency])
+            if(currency.includes('_'+form.from.code))
                 convertVar.value.push(data[currency])
-            }
+            // if(convertVar.length == 2)
+            //     break
+        }
+        }).then(async ()=>{
+            await fromCurrency()
+            await toCurrency()
+            await exchangeValue()
             boolConvert.value = true
         })
     ;
+
 };
 
+    let array = ref([])
 const exchangeValue = () =>{
+    array.value = []
+    let first = ''
+    let last = ''
 
-    let convertTo = '1 '+form.to.code+' = '+(1/convertVar.value[0]) + ' ' + form.from.code
-    let convertFrom = '1 '+form.from.code+' = '+(1/convertVar.value[1]) + ' ' + form.to.code
-    return [
-        convertTo,
-        convertFrom,
-    ]
+    for(let item in convertVar.value){
+        let exchange = (1/convertVar.value[item])
+        console.log('log',item);
+        if(parseInt(item) === 0){
+            first = 'to'
+            last = 'from'
+        }else{
+            last = 'to'
+            first = 'from'
+        }
+        let push = '1 '+form[first].code+' = '+ exchange + ' ' + form[last].code
+        console.log(push);
+        array.value.push(push)
+    }
 }
 
 const getCurrencies = () => {
     const url = "https://free.currconv.com/api/v7/currencies";
+
+    /**
+     * Test
+     */
+    // for (let currency in countries_test) {
+    //         let code = countries_test[currency].id
+    //         let name = countries_test[currency].currencyName
+    //         let label = code + ' - '+name
+    //         let symbol = countries_test[currency].currencySymbol
+    //         currencies.value.push({
+    //             code,label,name,symbol
+    //         })
+    //     }
 
     axios.get(url, { params: query }).then((resp) => {
         const data = resp.data.results;
@@ -98,10 +155,6 @@ const getCurrencies = () => {
         }
     });
 };
-
-onUpdated(() =>{
-    validateForm()
-})
 
 onMounted(() => {
     getCurrencies();
@@ -209,14 +262,14 @@ onMounted(() => {
                     <div v-if="boolConvert">
                         <div class="p-6">
                             <div class="text-gray-400 text-lg">
-                                {{fromCurrency()}}
+                                {{fromCurr}}
                             </div>
                             <div class="text-gray-800 text-4xl mt-[15px] ml-[25px]">
-                                {{toCurrency()}}
+                                {{toCurr}}
                             </div>
                         </div>
                         <div class="p-6">
-                             <div class="text-gray-400 text-lg" v-for="(item,k) in exchangeValue()" :key="k">
+                             <div class="text-gray-400 text-lg" v-for="(item,k) in array" :key="k">
                                 {{item}}
                             </div>
                         </div>
